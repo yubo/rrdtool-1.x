@@ -9,6 +9,8 @@
 
 #include "rrd_tool.h"
 
+#define DISABLE_USEC
+
 #if defined(_WIN32) && !defined(__CYGWIN__) && !defined(__CYGWIN32__)
 #include <sys/locking.h>
 #include <sys/stat.h>
@@ -310,6 +312,9 @@ static void initialize_time(
     } else {
         *current_time_usec = 0;
     }
+#ifdef DISABLE_USEC
+    *current_time_usec = 0;
+#endif
 }
 
 #define IFDNAN(X,Y) (isnan(X) ? (Y) : (X));
@@ -990,6 +995,11 @@ static int get_time_from_reading(
     /* dont do any correction for old version RRDs */
     if (version < 3)
         *current_time_usec = 0;
+
+#ifdef DISABLE_USEC
+	*current_time_usec = 0;
+#endif
+
 
     if (*current_time < rrd->live_head->last_up ||
         (*current_time == rrd->live_head->last_up &&
