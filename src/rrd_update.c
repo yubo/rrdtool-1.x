@@ -1662,11 +1662,15 @@ static void initialize_cdp_val(
 
     switch (current_cf) {
     case CF_AVERAGE:
-        cum_val = IFDNAN(scratch[CDP_val].u_val, 0.0);
-        cur_val = IFDNAN(pdp_temp_val, 0.0);
-        scratch[CDP_primary_val].u_val =
-            (cum_val + cur_val * start_pdp_offset) /
-            (pdp_cnt - scratch[CDP_unkn_pdp_cnt].u_cnt);
+		if(isnan(scratch[CDP_val].u_val) && isnan(pdp_temp_val)){
+			scratch[CDP_primary_val].u_val = DINF;
+		}else{
+			cum_val = IFDNAN(scratch[CDP_val].u_val, 0.0);
+			cur_val = IFDNAN(pdp_temp_val, 0.0);
+			scratch[CDP_primary_val].u_val =
+				(cum_val + cur_val * start_pdp_offset) /
+				(pdp_cnt - scratch[CDP_unkn_pdp_cnt].u_cnt);
+		}
         break;
     case CF_MAXIMUM: 
         cum_val = IFDNAN(scratch[CDP_val].u_val, -DINF);
