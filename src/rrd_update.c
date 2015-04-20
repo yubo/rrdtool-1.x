@@ -519,6 +519,7 @@ int _rrd_update(
     rrd_file_t *rrd_file;
     char     *arg_copy; /* for processing the argv */
     unsigned long *skip_update; /* RRAs to advance but not write */
+	int ret;
 
     /* need at least 1 arguments: data. */
     if (argc < 1) {
@@ -558,11 +559,12 @@ int _rrd_update(
             rrd_set_error("failed duplication argv entry");
             break;
         }
-        if (process_arg(arg_copy, &rrd, rrd_file, rra_begin,
+        ret = process_arg(arg_copy, &rrd, rrd_file, rra_begin,
                         &current_time, &current_time_usec, pdp_temp, pdp_new,
                         rra_step_cnt, updvals, tmpl_idx, tmpl_cnt,
                         &pcdp_summary, version, skip_update,
-                        &schedule_smooth) == -1) {
+                        &schedule_smooth);
+		if (ret == -1) {
             if (rrd_test_error()) { /* Should have error string always here */
                 char     *save_error;
 
@@ -574,7 +576,10 @@ int _rrd_update(
             }
             free(arg_copy);
             break;
-        }
+        }else if(ret == -2){
+			//nothing to do
+			//current_time <= last_up
+		}
         free(arg_copy);
     }
 
@@ -798,10 +803,13 @@ static int process_arg(
                                              * the last run */
     unsigned long proc_pdp_cnt;
 
-    if (parse_ds(rrd, updvals, tmpl_idx, step_start, tmpl_cnt,
-                 current_time, current_time_usec, version) == -1) {
-        return -1;
+	int ret;
+    ret = parse_ds(rrd, updvals, tmpl_idx, step_start, tmpl_cnt,
+                 current_time, current_time_usec, version);
+	if (ret) {
+        return ret;
     }
+
 
     interval = (double) (*current_time - rrd->live_head->last_up)
         + (double) ((long) *current_time_usec -
@@ -886,6 +894,7 @@ static int parse_ds(
     char     *p;
     unsigned long i;
     char      timesyntax;
+	int ret;
 
     updvals[0] = input;
     /* initialize all ds input to unknown except the first one
@@ -926,12 +935,9 @@ static int parse_ds(
         return -1;
     }
 
-    if (get_time_from_reading(rrd, timesyntax, updvals,
+    return get_time_from_reading(rrd, timesyntax, updvals,
                               current_time, current_time_usec,
-                              version) == -1) {
-        return -1;
-    }
-    return 0;
+                              version);
 }
 
 /*
@@ -1004,10 +1010,12 @@ static int get_time_from_reading(
     if (*current_time < rrd->live_head->last_up ||
         (*current_time == rrd->live_head->last_up &&
          (long) *current_time_usec <= (long) rrd->live_head->last_up_usec)) {
+		/*
         rrd_set_error("illegal attempt to update using time %ld when "
                       "last update time is %ld (minimum one second step)",
                       *current_time, rrd->live_head->last_up);
-        return -1;
+					  */
+        return -2;
     }
     return 0;
 }
