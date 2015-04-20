@@ -564,7 +564,7 @@ int _rrd_update(
                         rra_step_cnt, updvals, tmpl_idx, tmpl_cnt,
                         &pcdp_summary, version, skip_update,
                         &schedule_smooth);
-		if (ret == -1) {
+        if (ret == -1) {
             if (rrd_test_error()) { /* Should have error string always here */
                 char     *save_error;
 
@@ -579,7 +579,7 @@ int _rrd_update(
         }else if(ret == -2){
 			//nothing to do
 			//current_time <= last_up
-		}
+        }
         free(arg_copy);
     }
 
