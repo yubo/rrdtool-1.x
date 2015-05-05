@@ -258,6 +258,9 @@ int rrd_fetch_fn(
     for (i = 0; (unsigned long) i < rrd.stat_head->ds_cnt; i++) {
         if ((((*ds_namv)[i]) = (char*)malloc(sizeof(char) * DS_NAM_SIZE)) == NULL) {
             rrd_set_error("malloc fetch ds_namv entry");
+            for(ii = 0; ii < i; ii++){
+                free((*ds_namv)[ii]);
+            }
             goto err_free_ds_namv;
         }
         strncpy((*ds_namv)[i], rrd.ds_def[i].ds_nam, DS_NAM_SIZE - 1);
@@ -475,6 +478,8 @@ int rrd_fetch_fn(
         free((*ds_namv)[i]);
   err_free_ds_namv:
     free(*ds_namv);
+    *ds_namv = NULL;
+    *ds_cnt = 0;
   err_close:
     rrd_close(rrd_file);
   err_free:
